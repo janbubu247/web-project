@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Weather and Air Quality Info</title>
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    td, th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    img {
+        width: 100px;
+        height: 100px;
+    }
+    body {
+        background-image: url("Air-Quality.jpg");
+        background-size: cover;
+        background-attachment: fixed;
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let myChart;
+
+    function fetchInfo() {
+        const apiKey = '1992acd757593192e5b6ed69c774d2f2';
+        const lat = document.getElementById("lat").value;
+        const lon = document.getElementById("lon").value;
+
+        if (apiKey && lat && lon) {
+            const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+            const pollutionURL = `https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+
+            $.when(
+                $.ajax({ method: "GET", url: weatherURL }),
+                $.ajax({ method: "GET", url: pollutionURL })
+            ).done(function(weatherData, pollutionData) {
+                const temp = weatherData[0].main.temp;
+                const humidity = weatherData[0].main.humidity;
+                document.getElementById("temperature").innerHTML = `Temperature: ${temp}°C`;
+                document.getElementById("humidity").innerHTML = `Humidity: ${humidity}%`;
+
+                const components = pollutionData[0].list[0].components;
+                const airQualityData = [
+                    components.pm2_5,  // PM2.5
+                    components.pm10,   // PM10
+                    components.no,     // NOx
+                    components.nh3,    // NH3
+                    components.co,     // CO2
+                    components.so2,    // SO2
+                    components.o3      // VOC
+                ];
+                
+                // Update the air quality readings on the page
+                document.getElementById("PM2.5").innerHTML = `PM2.5: ${components.pm2_5} µg/m³`;
+                document.getElementById("PM10").innerHTML = `PM10: ${components.pm10} µg/m³`;
+                document.getElementById("NOx").innerHTML = `NOx: ${components.no} ppb`;
+                document.getElementById("NH3").innerHTML = `NH3: ${components.nh3} ppb`;
+                document.getElementById("CO2").innerHTML = `CO2: ${components.co} ppm`;
+                document.getElementById("SO2").innerHTML = `SO2: ${components.so2} ppb`;
+                document.getElementById("VOC").innerHTML = `VOC: ${components.o3} ppb`;
+
+                // Update or create the chart with real data
+                if (myChart) {
+                    myChart.data.datasets[0].data = airQualityData;
+                    myChart.update();
+                } else {
+                    createChart(airQualityData);
+                }
+            }).fail(function(jqXHR, textStatus) {
+                document.getElementById("resultDisplayArea").innerHTML = `- failed : ${textStatus}`;
+            });
+        } else {
+            document.getElementById("temperature").innerHTML = "Please enter valid latitude and longitude.";
+        }
+    }
+
+    function createChart(data) {
+        const ctx = document.getElementById('charts').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['PM2.5', 'PM10', 'NOx', 'NH3', 'CO2', 'SO2', 'VOC'],
+                datasets: [{
+                    label: 'Air Quality Components',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(201, 203, 207, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(201, 203, 207, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("search").addEventListener('click', fetchInfo);
+    });
+</script>
+</head>
+<body>
+    <h1 id="Home">Air Quality Monitoring Dashboard</h1>
+    <p>This webpage helps you retrieve air quality information.</p>
+    <hr>
+    <p>
+        Latitude: <input type="text" id="lat"><br/>
+        Longitude: <input type="text" id="lon"><br/>
+        <button type="button" id="search">Search</button>
+    </p>
+    <div id="temperature"></div>
+    <div id="humidity"></div>
+    <div id="PM2.5"></div>
+    <div id="PM10"></div>
+    <div id="NOx"></div>
+    <div id="NH3"></div>
+    <div id="CO2"></div>
+    <div id="SO2"></div>
+    <div id="VOC"></div>
+    <canvas id="charts" width="400" height="200"></canvas>
+</body>
+</html>
