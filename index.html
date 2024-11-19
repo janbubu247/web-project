@@ -7,6 +7,7 @@
 <title>Air Quality Monitoring Dashboard</title>
 <!--font owesome cdn link-->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
 <!--custom css file link-->
 <link rel="stylesheet" href="css/style.css">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -16,9 +17,9 @@
 
     function fetchInfo() {
         const apiKey = '92a4f5b5c8361f6a8693e1fb54b3837787174214';
-        const location = document.getElementById("location").value;
+        const location = document.getElementById("location").value.trim();
 
-        if (apiKey && location) {
+        if (location) {
             const URL = `https://api.waqi.info/feed/${location}/?token=${apiKey}`;
 
             $.ajax({
@@ -27,7 +28,7 @@
             }).done(function(response) {
                 if (response.status === "ok") {
                     // Air quality data
-                    const components = response.data.iaqi;
+                    const components = response.data.iaqi || {};
                     
                     const airQualityData = [
                         components.pm25 ? components.pm25.v : 0,  // PM2.5
@@ -39,14 +40,6 @@
                     ];
 
                     //update the tempersture reading on the page
-                    const forecast = response.data.forecast;
-                    
-                    const forecastData = [
-                        forecast.o3.map(day=>day.day),      // CO
-                        forecast.o3.map(day=>day.avg),    // SO2
-                        forecast.pm10.map(day=>day.avg),      // Ozone
-                        forecast.pm25.map(day=>day.avg)    // NO2
-                    ];
 
                     // Update the air quality readings on the page
                     document.getElementById("PM2.5").innerHTML = `PM2.5: ${airQualityData[0]} µg/m³`;
@@ -62,7 +55,6 @@
                         myChart.update();
                     } else {
                         createChart(airQualityData);
-                        lineGraph(forecastData);
                     }
                 } else {
                     document.getElementById("resultDisplayArea").innerHTML = "Failed to retrieve data: " + response.status;
@@ -76,7 +68,7 @@
     }
 
     function createChart(data) {
-        const ctx = document.getElementById('charts').getContext('2d');
+        const ctx = document.getElementById('chartCanvas').getContext('2d');
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -104,6 +96,12 @@
                 }]
             },
             options: {
+                responsive: true,
+                plugins:{
+                    legend:{
+                        display: true
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true
@@ -114,72 +112,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById("location").addEventListener('click', fetchInfo);
+        document.getElementById("search").addEventListener('click', fetchInfo);
     });
-//line graph to show week info
-    function lineGraph(data) {
-        const ctx = document.getElementById('line-graph').getContext('2d');
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [data[0]],
-                datasets: [
-                    {
-                        label: 'O3 (Ozone)',
-                        data: data[1],
-
-                        backgroundColor: 
-                            'rgba(255, 99, 132, 0.2)',
-                        borderColor: 
-                            'rgba(255, 99, 132, 1)'
-                        ,
-                        fill: false,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'PM10',
-                        data: data[2],
-
-                        backgroundColor: 
-                            'rgba(54, 162, 235, 1)',
-                        borderColor: 
-                            'rgba(255, 99, 132, 1)'
-                        ,
-                        fill: false,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'PM2.5',
-                        data: data[3],
-
-                        backgroundColor: 
-                            'rgba(255, 206, 86, 0.2)',
-                        borderColor: 
-                            'rgba(255, 206, 86, 1)'
-                        ,
-                        fill: false,
-                        tension: 0.1
-                    },
-                ]
-            },
-            options: {
-                scales: {
-                    x:{
-                        title:{
-                            display:true, text: "date"
-                        },
-                    },
-                    y: {
-                        title:{
-                            display:true, text: "value"
-                        },
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-
 </script>
 </head>
 <body>
@@ -187,41 +121,22 @@
     <a href="#" class="logo" alt="">
         <img src="images/logo2.png" width="80px" height="80px" alt="">
     </a>
-    <div class="navbar">
-        <nav class="navbar">
-            <a href="#home">home</a>
-            <a href="#about">about</a>
-            <a href="#menu">data display</a>
-            <a href="#products">products</a>
-            <a href="#contact">contact</a>
-            <a href="./js/MapComponents.html">maps</a>
-        </nav>
-    </div>
-    
-    <div class="icons">
-        <div class="fas fa-search" id="search-btn" ></div>
-        <div class="fas fa-shopping-cart" id="cart-btn"></div>
-        <div class="fas fa-bars" id="menu-btn"></div>
-    </div>
-    <div class="search-form">
-        <input type="search" id="search-box" placeholder="location..">
-        <label for="search-box" class="fas fa-search" onclick="search()"></label>
-    </div>
 
-    <div class="cart-items-container">
-        <div class="cart-item">
-            <span class="fas fa-times" onclick="removeItem(this)"></span>
-            <img src="images/co_2.jpg" alt="">
-            <div class="content">
-                <h3>CO2</h3>
-                <div class="price">learn/-</div>
-            </div>
-        </div>
-        <!-- <a href="#" class="btn">checkout now</a> -->
+    <nav class="navbar">
+        <a href="#home">home</a>
+        <a href="#about">about</a>
+        <a href="#menu">data display</a>
+        <a href="#products">products</a>
+        <a href="#contact">contact</a>
+        <a href="./js/MapComponents.html">maps</a>
+    </nav>
+    <div class="icons">
+        <div class="fas fa-bars" id="menu-btn"></div>
     </div>
 </div>
 
 </header>
+
 <!-- home section starts -->
 <section class="home" id="home">
     <div class="content">
@@ -232,7 +147,48 @@
 </section>
 <!-- home section ends-->
 <!-- about section starts-->
-
+<section id="sidebar-container">
+    <div class="container2">
+        <aside>
+            <div class="top">
+                <div class="logo">
+                    <h2>JAN<span class="danger">BUBU</span></h2>
+                </div>
+                <div class="close">
+                    <span class="material-symbols-outlined"> close </span>
+                </div>
+            </div>
+            <div class="sidebar">
+                <a href="#">
+                    <span class="material-symbols-outlined">grid_view</span>
+                    <h3>Dashboard</h3>
+                </a>
+                <a href="#">
+                    <span class="material-symbols-outlined">work_history</span>
+                    <h3>Yearly</h3>
+                </a>
+                <a href="#">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    <h3>Monthly</h3>
+                </a>
+                <a href="#">
+                    <span class="material-symbols-outlined">query_stats</span>
+                    <h3>Daily</h3>
+                </a>
+                <a href="#">
+                    <span class="material-symbols-outlined">live_help</span>
+                    <h3>FAQ</h3>
+                </a>
+            </div>
+        </aside>
+        <main>
+            <h1>main</h1>
+        </main>
+        <div class="right">
+            <h1>right</h1>
+        </div>
+    </div>
+    </section>
 <section class="about" id="about">
 
     <h1 class="heading"> <span>about</span> us </h1>
@@ -240,7 +196,7 @@
     <div class="row">
 
         <div class="image">
-            <img src="Air-Quality.jpg" alt="">
+            <img src="/images/Air-Quality.jpg" alt="">
         </div>
         <div class="content">
             <h3>air quality dashboard</h3>
@@ -250,8 +206,7 @@
 
     </div>
 </section>
-
-<section id="chart" class="chart">
+<section id="charts" class="charts">
     <h1 id="Home">Air Quality Monitoring Dashboard</h1>
     <p>This webpage helps you retrieve air quality information.</p>
     <hr>
@@ -265,10 +220,10 @@
     <div id="SO2"></div>
     <div id="Ozone"></div>
     <div id="NO2"></div>
-    <canvas id="charts" width="400" height="200"></canvas>
     
-    <div class="time"></div>
-    <canvas id="line-graph" width="400" height="200"></canvas>
+</section>
+<section  id="chartSection" class="charts">
+    <canvas id="chartCanvas" width="400" height="200"></canvas>
 </section>
 <!-- about section ends-->
 <!-- menu section starts-->
@@ -280,58 +235,58 @@
         <div class="box">
             <img src="images/rainbow.jpg" alt="">
             <h3>Temperature</h3>
-            <div class="price">°C <span>it is</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">°C </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">click</a>
         </div>   
 
         <div class="box">
             <img src="images/humidity.jpeg" alt="">
             <h3>Humidity</h3>
-            <div class="price">% <span>humid</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">% </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">click</a>
         </div>
         <div class="box">
             <img src="images/warning.jpg" alt="">
             <h3>PM2.5</h3>
-            <div class="price">µg/m³ <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">µg/m³ </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">click</a>
         </div>
         
         <div class="box">
             <img src="images/thunder.png" alt="">
             <h3>PM10</h3>
-            <div class="price">µg/m³ <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">µg/m³ </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">click</a>
         </div> 
         <div class="box">
             <img src="images/thunder.png" alt="">
             <h3>NOx</h3>
-            <div class="price">ppb <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">ppb </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">click</a>
         </div> 
         <div class="box">
             <img src="images/thunder.png" alt="">
             <h3>NH3</h3>
-            <div class="price">ppb <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">ppb </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">click</a>
         </div> 
         <div class="box">
             <img src="images/co_2.jpg" alt="">
             <h3>CO2</h3>
-            <div class="price">ppm <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">ppm </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Click</a>
         </div>
         <div class="box">
             <img src="images/hot.jpeg" alt="">
             <h3>SO2</h3>
-            <div class="price">ppb <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">ppb </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Click</a>
         </div>
         <div class="box">
             <img src="images/hot.jpeg" alt="">
             <h3>VOC</h3>
-            <div class="price">ppb <span>warn</span></div>
-            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Search</a>
+            <div class="price">ppb </div>
+            <a href="#menu" onclick="addToCart(this.parentElement)" class="btn">Click</a>
         </div>
 
     </div>
@@ -463,44 +418,6 @@
     <div class="credit">created by <span>ms. web designer</span> | copyright</div>
 </section>
 <!-- footer section ends  -->
-<!--custom js file link-->
-<script>
-    function removeItem(element){
-        const cartItem = element.closest('.cart-item');
-        cartItem.remove();
-    }
-    function addToCart(element) {
-    // Get the image source, title, and price from the menu item
-    const imgSrc = element.querySelector('img').src;
-    const title = element.querySelector('h3').textContent;
-    const price = element.querySelector('.price').firstChild.textContent.trim();
-    console.log(title, price);
-
-    // Create a new cart item
-    const cartItem = document.createElement('div');
-    cartItem.classList.add('cart-item');
-    cartItem.innerHTML = `
-        <span class="fas fa-times" onclick="removeItem(this)"></span>
-        <img src="${imgSrc}" alt="">
-        <div class="content">
-            <h3>${title}</h3>
-            <div class="price">${price}</div>
-        </div>
-    `;
-
-    // Append the new cart item to the cart items container
-    document.querySelector('.cart-items-container').appendChild(cartItem);
-    }
-    function fetchInfo(){
-        var userInput = document.getElementById("search-box").value;
-        if (userInput.length > 0) {
-            getElementById("chart") ;
-        } else {
-            alert("Please enter a search term.");
-        }
-    }
-</script>
-This better work!
 <script src="js/script.js" type="module"></script>
 </body>
 </html>
