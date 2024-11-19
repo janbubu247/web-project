@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nearby Restaurants Map</title>
-    <h1 class="title">Nearby Restaurants</h1>
+    <title>Nearby</title>
+    <h1 class="title">Nearby</h1>
     <button class="btn" value="back" onclick="goBack()">Back to Home</button><hr>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
@@ -31,7 +31,7 @@
             window.location.href = '../index.html';
         }
         document.addEventListener("DOMContentLoaded", function () {
-            const map = L.map('map').setView([37.4012191, 127.1086228], 13);
+            const map = L.map('map').setView([30.4012191, 127.1086228], 13);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
