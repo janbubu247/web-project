@@ -285,7 +285,7 @@ function fetchInfo() {
   const apiKeyWeather = '1992acd757593192e5b6ed69c774d2f2';
 
   if (location) {
-      const locationURL = `http://api.openweathermap.org/geo/1.0/direct?q=${location}&appid=${apiKeyWeather}`;
+      const locationURL = `https://api.openweathermap.org/geo/1.0/direct?q=${location}&appid=${apiKeyWeather}`;
 
       $.ajax({
           method: "GET",
