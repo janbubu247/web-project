@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <title>Contact</title>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+ <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+ <script>
+    $(document).ready(function(){
+        $("#usercheck").hide();
+        let usernameError = true;
+        $("#usernames").keyup(function(){
+            validateUsername();
+        });
+        function validateUsername(){
+            let usernameValue = $("#usernames").val();
+            if(usernameValue.length === ""){
+                $("#usercheck").show();
+                usernameError = false;
+                return false;
+            }else if (usernameValue.length<3||usernameValue.length>10){
+                $("#usercheck").show();
+                $("#usercheck").html("**length of username must be between 3 and 10");
+                usernameError = false;
+                return false;
+            }else{
+                $("#usercheck").hide();
+                usernameError = true;
+            }
+            // ...
+            
+        }
+        $("#lastcheck").hide();
+        let lastnameError = true;
+        $("#lastnames").keyup(function(){
+            validatelastname();
+        });
+        function validatelastname(){
+            let lastnameValue = $("#lastnames").val();
+            if(lastnameValue.length === ""){
+                $("#lastcheck").show();
+                lastnameError = false;
+                return false;
+            }else if (lastnameValue.length<3||lastnameValue.length>10){
+                $("#lastcheck").show();
+                $("#lastcheck").html("**length of lastname must be between 3 and 10");
+                lastnameError = false;
+                return false;
+            }else{
+                $("#lastcheck").hide();
+                lastnameError = true;
+            }
+            // ...
+            
+        }
+        $("#emailcheck").hide();
+        let useremailError = true;
+        $("#email").keyup(function(){
+            validateUseremail();
+        });
+        function validateUseremail(){
+            let useremailValue = $("#email").val();
+            if(useremailValue === ""){
+                $("#emailcheck").show();
+                $("#emailcheck").html("**Email cannot be empty");
+                useremailError = false;
+                return false;
+            }else if (useremailValue.slice(-10) !== "@gmail.com"){
+                $("#emailcheck").show();
+                $("#emailcheck").html("**invalid email domain");
+                useremailError = false;
+                return false;
+            }else{
+                $("#emailcheck").hide();
+                useremailError = true;
+            }
+
+        }
+        $("#contactcheck").hide();
+        let numberError = true;
+        $("#contact").keyup(function(){
+            validateContactNumber();
+        });
+        function validateContactNumber(){
+            let usernumberValue = $("#contact").val();
+            if(usernumberValue === ""){
+                $("#contactcheck").show();
+                $("#contactcheck").html("**Contact number cannot be empty");
+                numberError = false;
+                return false;
+            }else if (!/^\d+$/.test(usernumberValue)){
+                $("#contactcheck").show();
+                $("#contactcheck").html("**only digits are allowed");
+                usernumberError = false;
+                return false;
+            }
+            else if (usernumberValue.length>10){
+                $("#contactcheck").show();
+                $("#contactcheck").html("**only 10 digits");
+                usernumberError = false;
+                return false;
+            }else{
+                $("#contactcheck").hide();
+                numberError = true;
+            }
+
+        }
+        //***
+        $("#passwordcheck").hide();
+        let passwordError = true;
+        $("#password").keyup(function(){
+            validatepasswordNumber();
+        });
+        function validatepasswordNumber(){
+            let passwordValue = $("#password").val();
+            if(passwordValue === ""){
+                $("#passwordcheck").show();
+                $("#passwordcheck").html("**password number cannot be empty");
+                numberError = false;
+                return false;
+            }else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/.test(passwordValue)){
+                $("#passwordcheck").show();
+                $("#passwordcheck").html("**password must include uppercase, lowercase letters, a digit, and a special character");
+                passwordError = false;
+                return false;
+            }else{
+                $("#passwordcheck").hide();
+                passwordError = true;
+            }
+
+        }
+    })
+ </script>
+ <style>
+    body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #1b1a52;
+    color: #fff;
+}
+
+
+.btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: white;
+    background-color: #1a73e8;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #1558b0;
+}
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #1a73e8;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+.back-button:hover {
+    background-color: #1558b0;
+}
+    </style>
+</head>
+<body>
+ <h1 class="text-success text-center">Sign up
+ <a href="index.html" class="back-button">
+    <span class="material-symbols-outlined">arrow_back</span>
+</a>
+ </h1>
+ <div class="container">
+ <form action="#">
+ <div class="form-group">
+ <label for="fname">First Name:</label>
+ <input type="text" class="form-control" id="usernames"
+ placeholder="First Name" name="username"></input>
+ <small id="usercheck" class="text-danger"></small>
+</div>
+<div class="form-group">
+<label for="lastname">Last Name:</label>
+<input type="text" class="form-control" id="lastnames"
+placeholder="Last Name" name="lastname">
+<small id="lastcheck"  class="text-danger"></small>
+</div>
+<div class="form-group">
+<label for="email">Email Id:</label>
+<input type="email" class="form-control" id="email"
+placeholder="Email Id" name="email">
+<small id="emailcheck" class="text-danger"></small>
+</div>
+<div class="form-group">
+<label for="contact">Contact No:</label>
+<input type="text" class="form-control" id="contact"
+placeholder="Contact Number" name="contact">
+<small id="contactcheck" class="text-danger"></small>
+</div>
+<div class="form-group">
+    <label for="password">Password:</label>
+    <input type="password" class="form-control" id="password"
+    placeholder="Password" name="password">
+    <small id="passwordcheck" class="text-danger"></small>
+</div>
+<div class="form-group form-check">
+<label class="form-check-label">
+<input class="form-check-input" type="checkbox"
+name="remember"> 
+Remember me
+</label><br/>
+<label class="form-check-label">
+    <input class="form-check-input" type="checkbox"
+    name="remember" required> 
+    I agree 
+</label>
+
+</div>
+<button type="submit" class="btn bg-success">
+Submit
+</button>
+</form>
+</div>
+</body>
+</html>

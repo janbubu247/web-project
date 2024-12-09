@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1b1a52;
+            color: #fff;
+        }
+        .location {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-bar {
+            width: 200px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+        .btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #1558b0;
+        }
+        .chart-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #1a73e8;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background-color: #1558b0;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <h1>Temperature Compare</h1>
+    <div class="location">
+        <input type="text" class="search-bar" id="location1" placeholder="Search for location 1">
+        <input type="text" class="search-bar" id="location2" placeholder="Search for location 2">
+        <input type="text" class="search-bar" id="location3" placeholder="Search for location 3">
+        <button type="button" class="btn" id="search" onclick="fetchInfo()">Search</button>
+    </div>
+    <div class="chart-container">
+        <div id="charts"></div>
+    </div>
+
+    <script>
+        let chart;
+        function fetchInfo() {
+            const locations = [
+                document.getElementById("location1").value,
+                document.getElementById("location2").value,
+                document.getElementById("location3").value
+            ];
+
+            const apiKeyWeather = '1992acd757593192e5b6ed69c774d2f2';
+            const promises = locations.map(location => {
+                if (!location) return Promise.resolve(null);
+                const locationURL = `http://api.openweathermap.org/geo/1.0/direct?q=${location}&appid=${apiKeyWeather}`;
+                return $.ajax({ method: "GET", url: locationURL })
+                    .then(locationData => {
+                        if (locationData.length > 0) {
+                            const lat = locationData[0].lat;
+                            const lon = locationData[0].lon;
+                            return $.ajax({
+                                method: "GET",
+                                url: `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKeyWeather}`
+                            });
+                        }
+                        return null;
+                    });
+            });
+
+            Promise.all(promises).then(weatherDataArray => {
+                const series = weatherDataArray.map((weatherData, index) => {
+                    if (!weatherData) return null;
+                    const temps = weatherData.list.slice(0, 7).map(data => Math.round(data.main.temp - 273.15));
+                    const labels = weatherData.list.slice(0, 7).map(data => data.dt_txt);
+                    return {
+                        name: `${locations[index]} ${index + 1}`,
+                        data: labels.map((label, i) => [new Date(label).getTime(), temps[i]])
+                    };
+                }).filter(data => data !== null);
+
+                renderChart(series);
+            });
+        }
+
+        function renderChart(series) {
+            if(chart){
+                chart.destroy();
+            }
+            const options = {
+                series: series,
+                chart: {
+                    type: 'area',
+                    height: 350,
+                },
+                colors: ['#008FFB', '#00E396', '#FF4560'],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth'
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        opacityFrom: 0.6,
+                        opacityTo: 0.8,
+                    }
+                },
+                xaxis: {
+                    type: 'datetime'
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'left'
+                },
+            };
+            chart = new ApexCharts(document.querySelector("#charts"), options);
+            chart.render();
+        }
+    </script>
+</body>
+</html>

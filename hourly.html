@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Weather and Air Quality Info</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.box_container {   
+    display: flex;         /* Use flexbox for horizontal alignment */
+    flex-wrap: nowrap;     /* Prevent wrapping to a new line */
+    gap: 1rem;             /* Space between boxes */
+    padding: 1rem;         /* Padding around the container */
+    justify-content: space-between; /* Distribute space evenly */
+}
+
+.box {
+    background-color: #f4f4f4;    /* Light background for each box */
+    padding: 1rem;                /* Padding inside each box */
+    border-radius: 8px;           /* Rounded corners */
+    box-shadow: 3px 4px 8px rgba(0, 0, 0, 0.1); /* Shadow around the box */
+    display: flex;                /* Stack items vertically */
+    flex-direction: column;
+    align-items: center;          /* Center content horizontally */
+    text-align: center;           /* Center-align text */
+    width: calc(100% / 7 - 1rem); /* Equal width for 7 boxes */
+    box-sizing: border-box;       /* Include padding/border in width */
+}
+
+.box:hover {
+    background: #7b4949;          /* Dark background on hover */
+    color: var(--black);          /* Change text color on hover */
+}
+
+.box img {
+    height: 6rem; /* Adjust image size */
+    margin-bottom: 1rem;
+}
+
+.box h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.chart-container {
+    display: inline-block;
+    margin: 15px;
+    text-align: center;
+}
+
+
+.chart-container{
+    display: inline-block;
+    margin: 15px;
+    text-align: center;
+}
+canvas{
+    max-width: 100%;
+    height: auto;
+}
+.current{
+    font-size: large;
+    font-family: 'Gill Sans';
+    text-align: left;
+}
+</style>
+<script>
+    function fetchLocationAndInfo() {
+        const location = document.getElementById("location").value;
+        const apiKey = '1992acd757593192e5b6ed69c774d2f2';
+
+        if (location) {
+            const locationURL = `http://api.openweathermap.org/geo/1.0/direct?q=${location}&appid=${apiKey}`;
+            
+            // Fetch location data
+            $.ajax({
+                method: "GET",
+                url: locationURL,
+            }).done(function(locationData) {
+                if (locationData && locationData.length > 0) {
+                    const lat = locationData[0].lat;
+                    const lon = locationData[0].lon;
+
+                    document.getElementById("lat").innerHTML = `latitude: ${lat}`;
+                    document.getElementById("lon").innerHTML = `longitude: ${lon}`;
+
+                    // Fetch weather and pollution data using the retrieved coordinates
+                    const weatherURL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+
+                    $.ajax({ method: "GET", url: weatherURL })
+                    .done(function(weatherData) {
+                        createChart(weatherData)
+                        createPie(weatherData)
+                        createLine(weatherData)
+                        createLineTemp(weatherData)
+                        // Loop through each forecast and update the respective HTML elements
+                        weatherData.list.forEach(function(forecast, index) {
+                            const date = forecast.dt_txt;
+                            const temp = Math.round((forecast.main.temp-273,2)*100)/100;
+                            const humidity = forecast.main.humidity;
+                            const pressure = forecast.main.pressure;
+                            const wind_speed = forecast.wind.speed;
+                            const wind_deg = forecast.wind.deg;
+                            const main = forecast.weather[0].main || "";
+                            const description = forecast.weather[0].description || "";
+                            const clouds = forecast.clouds.all || "";
+
+
+                            // Update HTML for each index (day)
+                            document.getElementById(`date${index}`).innerHTML = ` ${date}`;
+                            document.getElementById(`main${index}`).innerHTML = `Main: ${main}`;
+                            document.getElementById(`description${index}`).innerHTML = `Description: ${description}`;
+                            document.getElementById(`clouds${index}`).innerHTML = `Clouds: ${clouds}%`;
+                            document.getElementById(`temperature${index}`).innerHTML = `Temperature: ${temp}°C`;
+                            document.getElementById(`humidity${index}`).innerHTML = `Humidity: ${humidity}%`;
+                            document.getElementById(`pressure${index}`).innerHTML = `Pressure: ${pressure}hPa`;
+                            document.getElementById(`wind_speed${index}`).innerHTML = `Wind Speed: ${wind_speed}m/s`;
+                            document.getElementById(`wind_deg${index}`).innerHTML = `Wind Degree: ${wind_deg}°`;
+                        });
+                    }).fail(function(jqXHR, textStatus) {
+                        alert(`Failed to retrieve weather data: ${textStatus}`);
+                    });
+                } else {
+                    alert("Location not found. Please try a different location.");
+                }
+            }).fail(function(jqXHR, textStatus) {
+                alert(`Failed to retrieve location: ${textStatus}`);
+            });
+        } else {
+            alert("Please enter a location name.");
+        }
+    }
+
+    
+
+    function createChart(weatherData) {
+        const ctx = document.getElementById('charts').getContext('2d');
+        
+        // Extract the first 7 temperature data points from the forecast list
+        const labels = weatherData.list.slice(0, 7).map((data, index) => `Hour ${index + 1}`);
+        const tempData = weatherData.list.slice(0, 7).map(data => data.main.temp-273); // 'main.temp' holds the temperature
+
+        // Create the chart with the extracted data
+        const myChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Temperature Forecast (°C)',
+                    data: tempData,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(201, 203, 207, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(201, 203, 207, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        suggestedMin: Math.min(...tempData) - 5,
+                        suggestedMax: Math.max(...tempData) + 5
+                    }
+                }
+            }
+        });
+    }
+    function createPie(weatherData) {
+        const ctx = document.getElementById('pie').getContext('2d');
+        
+        // Extract the first 7 temperature data points from the forecast list
+        const labels = weatherData.list.slice(0, 7).map((data, index) => `Hour ${index + 1}`);
+        const windSpeed = weatherData.list.slice(0, 7).map(data => data.wind.speed); // 'main.temp' holds the temperature
+
+        // Create the chart with the extracted data
+        const myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Wind speed (m/s)',
+                    data: windSpeed,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(201, 203, 207, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(201, 203, 207, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins:{
+                    legend:{
+                        position: 'top',
+                    },
+                    title:{
+                        display: true,
+                        text: 'wind speed'
+                    }
+                }
+                
+            }
+        });
+    }
+    function createLine(weatherData) {
+        const ctx = document.getElementById('line').getContext('2d');
+        
+        // Extract the first 7 temperature data points from the forecast list
+        const labels = weatherData.list.slice(0, 7).map((data, index) => `Hour ${index + 1}`);
+        const windSpeed = weatherData.list.slice(0, 7).map(data => data.wind.speed); // 'main.temp' holds the temperature
+
+        // Create the chart with the extracted data
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'wind speed (m/s)',
+                    data: windSpeed,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            
+        });
+    }
+    function createLineTemp(weatherData) {
+        const ctx = document.getElementById('linetemp').getContext('2d');
+        
+        // Extract the first 7 temperature data points from the forecast list
+        const labels = weatherData.list.slice(0, 7).map((data, index) => `Hour ${index + 1}`);
+        const temp = weatherData.list.slice(0, 7).map(data => data.main.temp-273); // 'main.temp' holds the temperature
+
+        // Create the chart with the extracted data
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'wind speed (m/s)',
+                    data: temp,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("search").addEventListener('click', fetchLocationAndInfo);
+    });
+                
+</script>
+</head>
+<body>
+    <h1 id="Home">Air Quality Monitoring Dashboard</h1>
+    <p>This webpage helps you retrieve air quality information.</p>
+    <hr>
+    <p>
+        Location: <input type="text" id="location" placeholder="Enter location"><br/>
+        <div id="lat">latitude:</div>
+        <div id="lon">longitude</div>
+        <button type="button" id="search">Search</button>
+    </p>
+    <div class="chart-container"><canvas id="charts" width="200" height="200"></canvas></div><br>
+    <div class="chart-container"><canvas id="pie" width="200" height="200"></canvas></div><br>
+    <div class="chart-container"><canvas id="line" width="200" height="200"></canvas></div><br>
+    <div class="chart-container"><canvas id="linetemp" width="200" height="200"></canvas></div><br>
+    <div class="box_container">
+    <div class="box">
+        <div id="date0"></div>
+        <div id="main0"><span id="icon_main0"></span></div>
+        <div id="description0"></div>
+        <div id="clouds0"></div>
+        <div id="temperature0"></div>
+        <div id="humidity0"></div>
+        <div id="pressure0"></div>
+        <div id="wind_speed0"></div>
+        <div id="wind_deg0"></div>
+    </div>
+    <div class="box">
+        <div id="date1"></div>
+        <div id="main1"><span id="icon_main1"></span></div>
+        <div id="description1"></div>
+        <div id="clouds1"></div>
+        <div id="temperature1"></div>
+        <div id="humidity1"></div>
+        <div id="pressure1"></div>
+        <div id="wind_speed1"></div>
+        <div id="wind_deg1"></div>
+    </div>
+
+    <span class="box">
+        <div id="date2"></div>
+        <div id="main2"><span id="icon_main2"></span></div>
+        <div id="description2"></div>
+        <div id="clouds2"></div>
+        <div id="temperature2"></div>
+        <div id="humidity2"></div>
+        <div id="pressure2"></div>
+        <div id="wind_speed2"></div>
+        <div id="wind_deg2"></div>
+    </span>
+    <span class="box">
+        <div id="date3"></div>
+        <div id="main3"><span id="icon_main3"></span></div>
+        <div id="description3"></div>
+        <div id="clouds3"></div>
+        <div id="temperature3"></div>
+        <div id="humidity3"></div>
+        <div id="pressure3"></div>
+        <div id="wind_speed3"></div>
+        <div id="wind_deg3"></div>
+    </span>
+    <span class="box">
+        <div id="date4"></div>
+        <div id="main4"><span id="icon_main4"></span></div>
+        <div id="description4"></div>
+        <div id="clouds4"></div>
+        <div id="temperature4"></div>
+        <div id="humidity4"></div>
+        <div id="pressure4"></div>
+        <div id="wind_speed4"></div>
+        <div id="wind_deg4"></div>
+    </span>
+    <span class="box">
+        <div id="date5"></div>
+        <div id="main5"><span id="icon_main5"></span></div>
+        <div id="description5"></div>
+        <div id="clouds5"></div>
+        <div id="temperature5"></div>
+        <div id="humidity5"></div>
+        <div id="pressure5"></div>
+        <div id="wind_speed5"></div>
+        <div id="wind_deg5"></div>
+    </span>
+    <span class="box">
+        <div id="date6"></div>
+        <div id="main6"><span id="icon_main6"></span></div>
+        <div id="description6"></div>
+        <div id="clouds6"></div>
+        <div id="temperature6"></div>
+        <div id="humidity6"></div>
+        <div id="pressure6"></div>
+        <div id="wind_speed6"></div>
+        <div id="wind_deg6"></div>
+    </span>
+    <span class="box">
+        <div id="date7"></div>
+        <div id="main7"><span id="icon_main7"></span></div>
+        <div id="description7"></div>
+        <div id="clouds7"></div>
+        <div id="temperature7"></div>
+        <div id="humidity7"></div>
+        <div id="pressure7"></div>
+        <div id="wind_speed7"></div>
+        <div id="wind_deg7"></div>
+    </span>
+</div>
+    
+</body>
+</html>

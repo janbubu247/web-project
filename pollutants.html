@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO Air Quality Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1b1a52;
+            color: #fff;
+        }
+        .gauge{
+            max-width: 400px;
+            margin: 50px auto;
+            position: relative;
+            height: 200px;
+        }
+        /* #chart_co , #chart_no2, #chart_ozone, #chart_pm25, #chart_pm10, #chart_so2{
+            max-width: 400px;
+            margin: 50px auto;
+        } */
+        .arrow {
+            position: absolute;
+            width: 2px;
+            height: 80px;
+            background-color: black;
+            left: 50%;
+            bottom: 110px;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-90deg);
+        }
+        .box-container {
+            max-width: 1200px;
+            margin: 50px auto;
+        }
+        .box {
+            display: inline-block;
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: white;
+            text-align: center;
+        }
+        .charts {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }  
+        
+        .location {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            width: 300px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #1558b0;
+        }
+
+        .box-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+
+        .box {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 280px;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #1a73e8;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background-color: #1558b0;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <h1>Air Quality Monitoring</h1>
+    <div class="graph">
+
+    </div>
+    <div class="location">
+        <input type="text" class="search-bar" id="location" placeholder="Search for location">
+        <button type="button" class="btn" id="search" onclick="fetchInfo()">Search</button>
+    </div>
+    <div id="resultDisplayArea"></div>
+
+    <div id="SO2">  </div>
+    <div id="NO2">  </div>
+    <div id="PM10"> </div>
+    <div id="PM2.5"></div>
+    <div id="Ozone"></div>
+    <div id="CO">   </div>
+
+
+<div class="box-container">
+    <div class="charts">
+        
+    <div class="box">
+        <h3>SO₂ Level (ppb):</h3>
+        <div id="chart_so2" class="gauge">
+            <div class="arrow" id="arrowSO2"></div>
+        </div>
+    </div>
+    
+    <div class="box">
+        <h3>NO₂ Level (ppb):</h3>
+        <div id="chart_no2" class="gauge">
+            <div class="arrow" id="arrowNO2"></div>
+        </div>
+    </div>
+    
+    <div class="box">
+        <h3>PM10 Level (µg/m³):</h3>
+        <div id="chart_pm10" class="gauge">
+            <div class="arrow" id="arrowPM10"></div>
+        </div>
+    </div>
+    
+    <div class="box">
+        <h3>PM2.5 Level (µg/m³):</h3>
+        <div id="chart_pm25" class="gauge">
+            <div class="arrow" id="arrowPM25"></div>
+        </div>
+    </div>
+    
+    <div class="box">
+        <h3>Ozone Level (ppb):</h3>
+        <div id="chart_ozone" class="gauge">
+            <div class="arrow" id="arrowOzone"></div>
+        </div>
+    </div>
+    
+    <div class="box">
+        <h3>CO Level (ppm):</h3>
+        <div id="chart_co" class="gauge">
+            <div class="arrow" id="arrowCO"></div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+
+<script>
+    function fetchInfo() {
+    const apiKeyWaqui = '92a4f5b5c8361f6a8693e1fb54b3837787174214';
+    const location = document.getElementById("location").value.trim();
+
+    if (location) {
+        const URL = `https://api.waqi.info/feed/${location}/?token=${apiKeyWaqui}`;
+
+        $.ajax({
+            method: "GET",
+            url: URL,
+        }).done(function(response) {
+            if (response.status === "ok") {
+                const components = response.data.iaqi || {};
+
+                // Air quality data (use fallback to 0 if the value is missing)
+                const airQualityData = {
+                    pm25: components.pm25 ? components.pm25.v : 0,  // PM2.5
+                    pm10: components.pm10 ? components.pm10.v : 0,  // PM10
+                    co: components.co ? components.co.v : 0,        // CO
+                    so2: components.so2 ? components.so2.v : 0,     // SO2
+                    o3: components.o3 ? components.o3.v : 0,        // Ozone
+                    no2: components.no2 ? components.no2.v : 0      // NO2
+                };
+
+                // Display the data values
+                document.getElementById("PM2.5").innerHTML = `PM2.5: ${airQualityData.pm25} µg/m³`;
+                document.getElementById("PM10").innerHTML = `PM10: ${airQualityData.pm10} µg/m³`;
+                document.getElementById("CO").innerHTML = `CO: ${airQualityData.co} ppm`;
+                document.getElementById("SO2").innerHTML = `SO2: ${airQualityData.so2} ppb`;
+                document.getElementById("Ozone").innerHTML = `Ozone: ${airQualityData.o3} ppb`;
+                document.getElementById("NO2").innerHTML = `NO2: ${airQualityData.no2} ppb`;
+
+                // Update each gauge with the retrieved values
+                updateChartPollutant(airQualityData.so2, 'arrowSO2', 600);  // Max for SO2 is 350
+                updateChartPollutant(airQualityData.no2, 'arrowNO2', 1250);  // Max for NO2 is 200
+                updateChartPollutant(airQualityData.pm10, 'arrowPM10', 425); // Max for PM10 is 150
+                updateChartPollutant(airQualityData.pm25, 'arrowPM25', 250); // Max for PM2.5 is 100
+                updateChartPollutant(airQualityData.o3, 'arrowOzone', 200);  // Max for Ozone is 180
+                updateChartPollutant(airQualityData.co, 'arrowCO', 30);      // Max for CO is 50
+            } else {
+                document.getElementById("resultDisplayArea").innerHTML = "Failed to retrieve data: " + response.status;
+            }
+        }).fail(function(jqXHR, textStatus) {
+            document.getElementById("resultDisplayArea").innerHTML = `- Failed: ${textStatus}`;
+        });
+    } else {
+        document.getElementById("resultDisplayArea").innerHTML = "Please enter a valid location.";
+    }
+}
+
+function updateChartPollutant(level, arrowId, maxLevel) {
+    if (isNaN(level)) {
+        console.error(`Invalid pollutant level for ${arrowId}`);
+        return;
+    }
+
+    // Calculate the rotation angle based on the percentage of the maximum level
+    const percentage = Math.min((level / maxLevel) * 100, 100);
+    const rotationAngle = (percentage * 180 / 100) - 90;
+
+    // Rotate the arrow element
+    document.getElementById(arrowId).style.transform = `translateX(-50%) rotate(${rotationAngle}deg)`;
+}
+
+
+    var options_so2 = {
+        series: [35, 40, 109, 118, 299], // Good, Fair, Poor ranges
+        chart: {
+            type: 'donut',
+        },
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: 10,
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'SO₂ Level'
+                        }
+                    }
+                }
+            }
+        },
+        labels: ['Good (0-35)', 'Fair (36-75)', 'Moderate (76-185)', 'Poor (186-304)', 'Very Poor (305-604)'],
+        colors: ['#4CAF50', '#FFC107','#FF7400','#F44336','#A020F0'], // Green, Yellow, Red
+        legend: {
+            position: 'bottom'
+        },
+        grid: {
+            padding: {
+                bottom: -80
+            }
+        },
+    };
+
+    var chart_so2 = new ApexCharts(document.querySelector("#chart_so2"), options_so2);
+    chart_so2.render();
+
+    var options_no2 = {
+        series: [53, 46, 259, 288, 600], // Good, Fair, Poor ranges
+        chart: {
+            type: 'donut',
+        },
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: 10,
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'NO₂ Level'
+                        }
+                    }
+                }
+            }
+        },
+        labels: ['Good (0-53)', 'Fair (54-100)', 'Moderate (101-360)','Poor (361-649)','Very Poor (650-1250+)'],
+        colors: ['#4CAF50', '#FFC107', '#FF7400','#F44336','#A020F0'], // Green, Yellow, Red
+        legend: {
+            position: 'bottom'
+        },
+        grid: {
+            padding: {
+                bottom: -80
+            }
+        },
+    };
+
+    var chart_no2 = new ApexCharts(document.querySelector("#chart_no2"), options_no2);
+    chart_no2.render();
+    
+    var options_pm10 = {
+        series: [54, 45, 259, 289, 600], // Good, Fair, Poor ranges
+        chart: {
+            type: 'donut',
+        },
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: 10,
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'PM10 Level'
+                        }
+                    }
+                }
+            }
+        },
+        labels: ['Good (0-54)', 'Fair (55-100)', 'Moderate (101-360)','Poor (360-649)','Very Poor (650-1250+)'],
+        colors: ['#4CAF50', '#FFC107', '#FF7400','#F44336','#A020F0'], // Green, Yellow, Red
+        legend: {
+            position: 'bottom'
+        },
+        grid: {
+            padding: {
+                bottom: -80
+            }
+        },
+    };
+
+    var chart_pm10 = new ApexCharts(document.querySelector("#chart_pm10"), options_pm10);
+    chart_pm10.render();
+
+    var options_pm25 = {
+        series: [12, 23, 20, 95, 100], // Good, Fair, Poor ranges
+        chart: {
+            type: 'donut',
+        },
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: 10,
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'PM2.5 Level'
+                        }
+                    }
+                }
+            }
+        },
+        labels: ['Good (0-12)', 'Fair (12-35)', 'Moderate (35-55)','Poor (55-150)','Very Poor (150-250+)'],
+        colors: ['#4CAF50', '#FFC107', '#FF7400','#F44336','#A020F0'], // Green, Yellow, Red
+        legend: {
+            position: 'bottom'
+        },
+        grid: {
+            padding: {
+                bottom: -80
+            }
+        },
+    };
+
+    var chart_pm25 = new ApexCharts(document.querySelector("#chart_pm25"), options_pm25);
+    chart_pm25.render();
+
+    var options_ozone = {
+        series: [54, 15, 14, 19, 94], // Good, Fair, Poor ranges
+        chart: {
+            type: 'donut',
+        },
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: 10,
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'ozone Level'
+                        }
+                    }
+                }
+            }
+        },
+        labels: ['Good (0-54)', 'Fair (55-70)', 'Moderate (71-85)','Poor (86-105)','Very Poor (106-200)'],
+        colors: ['#4CAF50', '#FFC107', '#FF7400','#F44336','#A020F0'], // Green, Yellow, Red
+        legend: {
+            position: 'bottom'
+        },
+        grid: {
+            padding: {
+                bottom: -80
+            }
+        },
+    };
+
+    var chart_ozone = new ApexCharts(document.querySelector("#chart_ozone"), options_ozone);
+    chart_ozone.render();
+
+    var options_co = {
+        series: [4.4, 5, 3, 3, 15], 
+        chart: {
+            type: 'donut',
+        },
+        plotOptions: {
+            pie: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: 10,
+                donut: {
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'CO Level'
+                        }
+                    }
+                }
+            }
+        },
+        labels: ['Good (0-4.4)', 'Fair (4.4-9.4)', 'Moderate (9.4-12.4)','Poor (12.4-15.4)','Very Poor (15.5-30.4)'],
+        colors: ['#4CAF50', '#FFC107', '#FF7400','#F44336','#A020F0'],
+        legend: {
+            position: 'bottom'
+        },
+        grid: {
+            padding: {
+                bottom: -80
+            }
+        },
+    };
+
+    var chart_co = new ApexCharts(document.querySelector("#chart_co"), options_co);
+    chart_co.render();
+
+    
+
+    
+</script>
+
+</body>
+</html>
