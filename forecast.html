@@ -93,7 +93,7 @@
             const apiKeyWeather = '1992acd757593192e5b6ed69c774d2f2';
             const promises = locations.map(location => {
                 if (!location) return Promise.resolve(null);
-                const locationURL = `http://api.openweathermap.org/geo/1.0/direct?q=${location}&appid=${apiKeyWeather}`;
+                const locationURL = `https://api.openweathermap.org/geo/1.0/direct?q=${location}&appid=${apiKeyWeather}`;
                 return $.ajax({ method: "GET", url: locationURL })
                     .then(locationData => {
                         if (locationData.length > 0) {
